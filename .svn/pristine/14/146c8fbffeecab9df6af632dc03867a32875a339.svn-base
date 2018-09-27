@@ -1,0 +1,161 @@
+package falstad; //Done
+
+import falstad.Robot.Direction;
+import falstad.Robot.Turn;
+import generation.Distance;
+
+/**
+ * The WallFollower Class implements the RobotDriver interface, the WallFollower object is created inside the MazeController file before the 
+ * BasicRobot is passed to it. The wallFollower algorithm is designed to keep the robot glued to the wall on its left side and follow it to the
+ * exit location. The only possible problem with this algorithm is it starts in a room that causes the function follow a wall that is an island and is
+ * disconnected from the rest of the maze causing the algorithm to loop until it runs out of battery.
+ * 
+ * Collaborators: RobotDriver, BasicRobot, and MazeController
+ * 
+ * @authors Chris Wolinski & Marcelino Dayrit
+ *
+ */
+public class WallFollower implements RobotDriver {
+	protected int[][] mazeBoard;
+	protected BasicRobot basic;
+	protected int pathLength=0;
+	protected int width;
+	protected int height;
+	protected Distance dist;
+	protected float Battery;
+	protected Robot robot;
+	protected MazeController controller;
+	
+	public WallFollower(MazeController maze) {
+		mazeBoard = null;
+		robot = null;
+		dist = null;
+		pathLength = 0;
+		this.controller = maze;
+	}
+
+	@Override
+	public void setRobot(Robot r) {
+		assert r != null;
+		robot= r;
+		Battery = robot.getBatteryLevel();
+	}
+
+	@Override
+	public void setDimensions(int width, int height) {
+		this.height = height;
+		this.width = width;
+		mazeBoard = new int[width][height];
+	}
+
+	@Override
+	public void setDistance(Distance distance) {
+		this.dist = distance;	
+	}
+
+	@Override
+	public boolean drive2Exit() throws Exception {
+
+		controller.showMaze = true;
+		controller.showSolution = true;
+		controller.mapMode = true;
+		
+		while(!robot.isAtExit()) {
+			if (robot.getBatteryLevel() == 0) {
+				return false;
+			}
+			if (robot.distanceToObstacle(Direction.FORWARD) > 0 && robot.distanceToObstacle(Direction.LEFT) == 0) {
+				move();
+			}
+			else {
+				 if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+					 turnLeftMove();
+				 }
+			    else if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+			    	turnRightMove();
+			    }
+			    else {
+					turnAroundMove();
+			    }
+			}
+		}
+		checkForExit();
+		return true;
+	}
+	/**
+	 *checkForExit() is designed to check all 4 directions and see if the robot is next to the maze exit
+	 *if it is then it calls setEndGame().
+	 */
+	void checkForExit() throws Exception {
+		if (robot.canSeeExit(Direction.FORWARD)) {
+			setEndGame();
+		}
+		else if (robot.canSeeExit(Direction.BACKWARD)) {
+			setEndGame();
+		}
+		else if (robot.canSeeExit(Direction.RIGHT)) {
+			setEndGame();
+		}
+		else if (robot.canSeeExit(Direction.LEFT)) {
+			setEndGame();
+		}
+	}
+	/**
+	 *move() is designed to move the robot forward one cell. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	private void move() throws Exception {
+		robot.move(1, false);
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *turnLeftMove() is designed to turn the robot left and move the robot forward one cell. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	void turnLeftMove() throws Exception {
+		robot.rotate(Turn.LEFT);
+		robot.move(1, false);
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *turnRightMove() is designed to turn the robot right and move the robot forward one cell. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	void turnRightMove() throws Exception {
+		robot.rotate(Turn.RIGHT);
+		robot.move(1, false);
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *turnAroundMove() is designed to turn the robot around and move the robot forward one cell. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	private void turnAroundMove() throws Exception {
+		robot.rotate(Turn.AROUND);
+		robot.move(1, false);
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *setEndGame() is designed to change the maze's state to end game then to call the notifyViewerRedraw().
+	 */
+	private void setEndGame() throws Exception {
+		robot.isAtExit();
+		controller.state = Constants.StateGUI.STATE_FINISH;
+		controller.notifyViewerRedraw();
+	}
+	
+	@Override
+	public float getEnergyConsumption() {
+		return 3000 - robot.getBatteryLevel();
+	}
+
+	@Override
+	public int getPathLength() {
+		return pathLength;
+	}
+
+}

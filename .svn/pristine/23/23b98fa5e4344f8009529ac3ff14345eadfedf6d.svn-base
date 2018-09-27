@@ -1,0 +1,79 @@
+package falstad;
+
+import falstad.Robot.Direction;
+import falstad.Robot.Turn;
+import generation.Distance;
+
+public class Wizard implements RobotDriver {
+	protected int[][] mazeBoard;
+	protected BasicRobot basic;
+	protected int pathLength=0;
+	protected int width;
+	protected int height;
+	protected Distance dist;
+	protected float Battery;
+	protected Robot robot;
+	protected MazeController controller;
+	
+	public Wizard() {
+		mazeBoard = null;
+		robot = null;
+		dist = null;
+		pathLength = 0;
+		controller = new MazeController();
+		
+		
+		@Override
+		public void setRobot(Robot r) {
+			assert r != null;
+			robot= r;
+			Battery = robot.getBatteryLevel();
+		}
+
+		@Override
+		public void setDimensions(int width, int height) {
+			this.height = height;
+			this.width = width;
+			mazeBoard = new int[width][height];
+		}
+
+		@Override
+		public void setDistance(Distance distance) {
+			this.dist = distance;
+			
+		}
+
+		@Override
+		public boolean drive2Exit() throws Exception {
+			while(!robot.isAtExit()) {
+				if (robot.getBatteryLevel() == 0) {
+					return false;
+				}
+			}
+			if (robot.canSeeExit(Direction.FORWARD)) {
+				( (BasicRobot) basic).control.state = Constants.StateGUI.STATE_FINISH;
+			}
+			else if (robot.canSeeExit(Direction.BACKWARD)) {
+				( (BasicRobot) robot).control.state = Constants.StateGUI.STATE_FINISH;
+			}
+			else if (robot.canSeeExit(Direction.RIGHT)) {
+				( (BasicRobot) robot).control.state = Constants.StateGUI.STATE_FINISH;
+			}
+			else if (robot.canSeeExit(Direction.LEFT)) {
+				( (BasicRobot) robot).control.state = Constants.StateGUI.STATE_FINISH;
+			}
+			( (BasicRobot) robot).control.notifyViewerRedraw();
+			return true;
+		}
+			
+		@Override
+		public float getEnergyConsumption() {
+			return 3000 - robot.getBatteryLevel();
+		}
+
+		@Override
+		public int getPathLength() {
+			return pathLength;
+		}
+
+	}

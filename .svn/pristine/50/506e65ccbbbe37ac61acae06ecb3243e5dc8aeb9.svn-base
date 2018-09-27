@@ -1,0 +1,117 @@
+package falstad;
+
+import falstad.Robot.Direction;
+import falstad.Robot.Turn;
+import generation.Distance;
+
+public class WallFollower extends ManualDriver{
+	protected int[][] mazeBoard;
+	protected BasicRobot basic;
+	protected int pathLength=0;
+	protected int width;
+	protected int height;
+	protected Distance dist;
+	protected float Battery;
+	protected Robot robot;
+	protected MazeController controller;
+	
+	public WallFollower(MazeController maze) {
+		mazeBoard = null;
+		robot = null;
+		dist = null;
+		pathLength = 0;
+		this.controller = maze;
+	}
+
+	
+	@Override
+	public void setRobot(Robot r) {
+		assert r != null;
+		robot= r;
+		Battery = robot.getBatteryLevel();
+	}
+
+	@Override
+	public void setDimensions(int width, int height) {
+		this.height = height;
+		this.width = width;
+		mazeBoard = new int[width][height];
+	}
+
+	@Override
+	public void setDistance(Distance distance) {
+		this.dist = distance;
+		
+	}
+
+	@Override
+	public boolean drive2Exit() throws Exception {
+
+
+		controller.showMaze = true;
+		controller.showSolution = true;
+		controller.mapMode = true;
+		
+		while(!robot.isAtExit()) {
+			if (robot.getBatteryLevel() == 0) {
+				return false;
+			}
+			if (robot.distanceToObstacle(Direction.FORWARD) > 0 && robot.distanceToObstacle(Direction.LEFT) == 0) {
+				robot.move(1, false);
+				controller.notifyViewerRedraw();
+				Thread.sleep(250);
+			}
+			else {
+				 if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+					robot.rotate(Turn.LEFT);
+					robot.move(1, false);
+					controller.notifyViewerRedraw();
+					Thread.sleep(250);
+				 }
+			    else if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+						robot.rotate(Turn.RIGHT);
+						robot.move(1, false);
+						controller.notifyViewerRedraw();
+						Thread.sleep(250);
+			    }
+			    else {
+					robot.rotate(Turn.AROUND);
+					robot.move(1, false);
+					controller.notifyViewerRedraw();
+					Thread.sleep(250);
+			    }
+			}
+			pathLength++;
+		}
+		if (robot.canSeeExit(Direction.FORWARD)) {
+			controller.state = Constants.StateGUI.STATE_FINISH;
+			controller.notifyViewerRedraw();
+		}
+		else if (robot.canSeeExit(Direction.BACKWARD)) {
+			controller.state = Constants.StateGUI.STATE_FINISH;
+			controller.notifyViewerRedraw();
+		}
+		else if (robot.canSeeExit(Direction.RIGHT)) {
+			controller.state = Constants.StateGUI.STATE_FINISH;
+			controller.notifyViewerRedraw();
+		}
+		else if (robot.canSeeExit(Direction.LEFT)) {
+			controller.state = Constants.StateGUI.STATE_FINISH;
+			controller.notifyViewerRedraw();
+		}
+			
+		return true;
+
+	}
+		
+	@Override
+	public float getEnergyConsumption() {
+		return 3000 - robot.getBatteryLevel();
+	}
+
+	@Override
+	public int getPathLength() {
+		return pathLength;
+	}
+
+}

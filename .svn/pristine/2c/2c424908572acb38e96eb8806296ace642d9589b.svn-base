@@ -1,0 +1,388 @@
+package falstad;//Done
+
+import falstad.Robot.Direction;
+import falstad.Robot.Turn;
+import generation.CardinalDirection;
+import generation.Distance;
+
+/**
+ * The Wizard Class implements the RobotDriver interface, the Wizard object is created inside the MazeController file before the 
+ * BasicRobot is passed to it. The wizard algorithm is designed to keep the robot moving into the next position that is closer to 
+ * the exit when compared to its current position. The wizard algorithm follows the show solution line to the exit. It is know as 
+ * the most effective algorithm due to its ability to cheat.
+ * 
+ * Collaborators: RobotDriver, BasicRobot, and MazeController
+ * 
+ * @authors Chris Wolinski & Marcelino Dayrit
+ *
+ */
+public class Wizard implements RobotDriver{
+	protected int[][] mazeBoard;
+	protected BasicRobot basic;
+	protected int pathLength=0;
+	protected int width;
+	protected int height;
+	protected Distance dist;
+	protected float Battery;
+	protected Robot robot;
+	protected MazeController controller;
+	
+	public Wizard(MazeController maze) {
+		mazeBoard = null;
+		robot = null;
+		dist = null;
+		pathLength = 0;
+		this.controller = maze;
+	}
+	
+	@Override
+	public void setRobot(Robot r) {
+		assert r != null;
+		robot= r;
+		Battery = robot.getBatteryLevel();
+	}
+
+	@Override
+	public void setDimensions(int width, int height) {
+		this.height = height;
+		this.width = width;
+		mazeBoard = new int[width][height];
+	}
+
+	@Override
+	public void setDistance(Distance distance) {
+		this.dist = distance;
+		
+	}
+
+	@Override
+	public boolean drive2Exit() throws Exception {
+
+		controller.showMaze = true;
+		controller.showSolution = true;
+		controller.mapMode = true;
+		
+		while(!robot.isAtExit()) {
+			
+			if (robot.getBatteryLevel() == 0) {
+				return false;
+			}
+			if(robot.distanceToObstacle(Direction.FORWARD) == 0 && robot.distanceToObstacle(Direction.LEFT) == 0 && robot.distanceToObstacle(Direction.RIGHT) == 0){
+				turnAround();
+			}
+			if (robot.distanceToObstacle(Direction.FORWARD) > 0) {
+				int x = controller.getCurrentPosition()[0];
+				int y = controller.getCurrentPosition()[1];
+				CardinalDirection z = controller.getCurrentDirection();
+				switch (z) {
+				case East:
+					int curDist = dist.getDistance(x,y);
+					if (robot.isAtExit()){
+						checkForExit();
+						break;
+					}
+					int FowDist = dist.getDistance(x+1,y);
+					if (curDist > FowDist) {
+						 move();
+					}
+					else if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+						wizardLeft();
+						if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+							wizardRight();
+						}
+					}
+					else if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+						wizardRight();
+						if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+							wizardLeft();
+						}
+					}
+					break;
+				case South:
+					 curDist = dist.getDistance(x,y);
+					 if (robot.isAtExit()){
+							checkForExit();
+							break;
+						}
+					 FowDist = dist.getDistance(x,y+1);
+					if (curDist > FowDist) {
+						 move();
+					}
+					else if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+						wizardLeft();
+						if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+							wizardRight();
+						}
+					}
+					else if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+						wizardRight();
+						if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+							wizardLeft();
+						}
+					}
+					break;
+				case North:
+					 curDist = dist.getDistance(x,y);
+					 if (robot.isAtExit()){
+							checkForExit();
+							break;
+						}
+					 FowDist = dist.getDistance(x,y-1);
+					if (curDist > FowDist) {
+						 move();
+					}
+					else if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+						wizardLeft();
+						if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+							wizardRight();
+						}
+					}
+					else if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+						wizardRight();
+						if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+							wizardLeft();
+						}
+					}
+					break;
+				case West:
+					 curDist = dist.getDistance(x,y);
+					 if (robot.isAtExit()){
+							checkForExit();
+							break;
+						}
+					 FowDist = dist.getDistance(x-1,y);
+					if (curDist > FowDist) {
+						 move();
+					}
+					else if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+						wizardLeft();
+						if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+							wizardRight();
+						}
+					}
+					else if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+						wizardRight();
+						if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+							wizardLeft();
+						}
+					}
+					break;
+				default:
+					break;
+				}
+			}
+			else {
+				 if (robot.distanceToObstacle(Direction.LEFT) > 0) {
+					 wizardLeft();
+				 }
+			     if (robot.distanceToObstacle(Direction.RIGHT) > 0) {
+			    	 wizardRight();
+			    }
+			}
+		}
+		checkForExit();
+		return true;
+	}
+	/**
+	 *checkForExit() is designed to check all 4 directions and see if the robot is next to the maze exit
+	 *if it is then it calls setEndGame().
+	 */
+	private void checkForExit() throws Exception {
+		if (robot.canSeeExit(Direction.FORWARD)) {
+			setEndGame();
+		}
+		else if (robot.canSeeExit(Direction.BACKWARD)) {
+			setEndGame();
+		}
+		else if (robot.canSeeExit(Direction.RIGHT)) {
+			setEndGame();
+		}
+		else if (robot.canSeeExit(Direction.LEFT)) {
+			setEndGame();
+		}
+	}
+	/**
+	 *move() is designed to move the robot forward one cell. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	private void move() throws Exception {
+		robot.move(1, false);
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *turnLeftMove() is designed to turn the robot left and move the robot forward one cell. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	private void turnLeftMove() throws Exception {
+		robot.rotate(Turn.LEFT);
+		if (robot.isAtExit()){
+			checkForExit();
+		}
+		else {
+		robot.move(1, false);
+		}
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *turnRightMove() is designed to turn the robot right and move the robot forward one cell. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	private void turnRightMove() throws Exception {
+		robot.rotate(Turn.RIGHT);
+		if (robot.isAtExit()){
+			checkForExit();
+		}
+		else {
+		robot.move(1, false);
+		}
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *turnAround() is designed to turn the robot. 
+	 *It then calls notifyViewerRedraw() and puts the thread to sleep.
+	 */
+	private void turnAround() throws Exception {
+		robot.rotate(Turn.AROUND);
+		controller.notifyViewerRedraw();
+		Thread.sleep(250);
+	}
+	/**
+	 *wizardRight() is designed to get the current position of the robot and the direction its facing
+	 *and with that information it determines if turning right and moving will bring it closer to the exit.
+	 *It makes this calculation by checking if the future location will have a lower distance number when 
+	 *compared to the current location if it will it goes ahead and calls the turnRightMove().
+	 */
+	private void wizardRight() throws Exception {
+		
+		int x = controller.getCurrentPosition()[0];
+		int y = controller.getCurrentPosition()[1];
+		CardinalDirection z = controller.getCurrentDirection();
+		switch (z) {
+		case East:
+			int curDist = dist.getDistance(x,y);
+			if (robot.isAtExit()){
+				checkForExit();
+				break;
+			}
+			int rightDist = dist.getDistance(x,y-1);
+			if (curDist > rightDist) {
+				turnRightMove();
+			}
+			break;
+		case South:
+			 curDist = dist.getDistance(x,y);
+			 if (robot.isAtExit()){
+					checkForExit();
+					break;
+				}
+			 rightDist = dist.getDistance(x+1,y);
+			if (curDist > rightDist) {
+				turnRightMove();
+			}
+			break;
+		case North:
+			 curDist = dist.getDistance(x,y);
+			 if (robot.isAtExit()){
+					checkForExit();
+					break;
+				}
+			 rightDist = dist.getDistance(x-1,y);
+			if (curDist > rightDist) {
+				turnRightMove();
+			}
+			break;
+		case West:
+			 curDist = dist.getDistance(x,y);
+			 if (robot.isAtExit()){
+					checkForExit();
+					break;
+				}
+			 rightDist = dist.getDistance(x,y+1);
+			if (curDist > rightDist) {
+				turnRightMove();
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	/**
+	 *wizardLeft() is designed to get the current position of the robot and the direction its facing
+	 *and with that information it determines if turning left and moving will bring it closer to the exit.
+	 *It makes this calculation by checking if the future location will have a lower distance number when 
+	 *compared to the current location if it will it goes ahead and calls the turnLeftMove().
+	 */
+	private void wizardLeft() throws Exception {
+		int x = controller.getCurrentPosition()[0];
+		int y = controller.getCurrentPosition()[1];
+		CardinalDirection z = controller.getCurrentDirection();
+		switch (z) {
+		case East:
+			int curDist = dist.getDistance(x,y);
+			if (robot.isAtExit()){
+				checkForExit();
+				break;
+			}
+			int leftDist = dist.getDistance(x,y+1);
+			if (curDist > leftDist) {
+				 turnLeftMove();
+			}
+			break;
+		case South:
+			 curDist = dist.getDistance(x,y);
+			 if (robot.isAtExit()){
+					checkForExit();
+					break;
+				}
+			 leftDist = dist.getDistance(x-1,y);
+			if (curDist > leftDist) {
+				turnLeftMove();
+			}
+			break;
+		case North:
+			 curDist = dist.getDistance(x,y);
+			 if (robot.isAtExit()){
+					checkForExit();
+					break;
+				}
+			 leftDist = dist.getDistance(x+1,y);
+			if (curDist > leftDist) {
+				turnLeftMove();
+			}
+			break;
+		case West:
+			 curDist = dist.getDistance(x,y);
+			 if (robot.isAtExit()){
+					checkForExit();
+					break;
+				}
+			 leftDist = dist.getDistance(x,y-1);
+			if (curDist > leftDist) {
+				turnLeftMove();
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	/**
+	 *setEndGame() is designed to change the maze's state to end game then to call the notifyViewerRedraw().
+	 */
+	private void setEndGame() throws Exception {
+		robot.isAtExit();
+		controller.state = Constants.StateGUI.STATE_FINISH;
+		controller.notifyViewerRedraw();
+	}
+	@Override
+	public float getEnergyConsumption() {
+		return 3000 - robot.getBatteryLevel();
+	}
+	@Override
+	public int getPathLength() {
+		return pathLength;
+	}
+
+}

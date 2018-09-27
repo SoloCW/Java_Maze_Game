@@ -1,0 +1,394 @@
+package falstad;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import generation.CardinalDirection;
+import generation.MazeConfiguration;
+import generation.MazeFactory;
+import generation.StubOrder;
+import generation.Order.Builder;
+import generation.StubMazeController;
+
+public class BasicRobotTest extends BasicRobot{
+
+
+	
+	private MazeApplication maze; 
+	
+	
+	
+	private BasicRobot basic;
+	private StubMazeController sController;
+	private CardinalDirection curDir;
+	private MazeFactory mazefactory;
+	private StubOrder sOrder;
+	private MazeConfiguration mazeConfig;
+	private ManualDriver driver;
+	
+	
+	private void mySetup() {
+		
+		basic = new BasicRobot();
+		driver = new ManualDriver();
+		
+		sController = new StubMazeController();
+		
+		mazefactory = new MazeFactory(true);
+		sOrder = new StubOrder(1, true, Builder.DFS);
+		mazefactory.order(sOrder);
+		mazefactory.waitTillDelivered();
+		mazeConfig = sOrder.getConfiguration();
+		
+		sController.deliver(mazeConfig);
+		basic.setBatteryLevel(3000);
+		basic.resetOdometer();
+		basic.setMaze(sController);
+		curDir = CardinalDirection.East;
+	}
+	
+	
+	
+	
+	@Test
+	public void testContructor() {
+		mySetup();
+		
+		assertTrue(basic.getBatteryLevel()==3000);
+		assertTrue(basic.getPathLength()==0);
+		assertFalse(basic.hasStopped());
+
+		assertTrue(basic.forwardSensor);
+		assertTrue(basic.backwardSensor);
+		assertTrue(basic.leftSensor);
+		assertTrue(basic.rightSensor);
+		assertTrue(curDir== CardinalDirection.East);
+		
+		
+	}
+	
+	@Test
+	public void testRotateLeft() {
+		mySetup();	
+	    basic.rotate(Turn.LEFT);
+		assertTrue(basic.curDir == CardinalDirection.South);
+
+	    basic.rotate(Turn.LEFT);
+		assertTrue(basic.curDir == CardinalDirection.West);
+
+	    basic.rotate(Turn.LEFT);
+		assertTrue(basic.curDir == CardinalDirection.North);
+		
+
+	    basic.rotate(Turn.LEFT);
+		assertTrue(basic.curDir == CardinalDirection.East);
+	}	
+	@Test
+	public void testRotateRight() {
+		mySetup();	
+	    basic.rotate(Turn.RIGHT);
+		assertTrue(basic.curDir == CardinalDirection.North);
+
+	    basic.rotate(Turn.RIGHT);
+		assertTrue(basic.curDir == CardinalDirection.West);
+
+	    basic.rotate(Turn.RIGHT);
+		assertTrue(basic.curDir == CardinalDirection.South);
+		
+	    basic.rotate(Turn.RIGHT);
+		assertTrue(basic.curDir == CardinalDirection.East);
+	}	
+	@Test
+	public void testRotateAround() {
+		mySetup();
+		
+	    basic.rotate(Turn.AROUND);
+		assertTrue(basic.curDir == CardinalDirection.West);
+
+	    basic.rotate(Turn.AROUND);
+		assertTrue(basic.curDir == CardinalDirection.East);
+
+	}	
+	
+	@Test
+	public void testRotateRightWithNoBattery() {
+		mySetup();
+		basic.setBatteryLevel(0);
+	    basic.rotate(Turn.RIGHT);
+		assertTrue(basic.hasStopped());
+
+	}	
+	@Test
+	public void testRotateRightWith3Battery() {
+		mySetup();
+
+		basic.setBatteryLevel(3);
+	    basic.rotate(Turn.RIGHT);
+	    assertTrue(basic.curDir == CardinalDirection.North);
+		assertTrue(basic.hasStopped());
+
+	}	
+	@Test
+	public void testRotateLeftWithNoBattery() {
+		mySetup();
+		basic.setBatteryLevel(0);
+	    basic.rotate(Turn.LEFT);
+		assertTrue(basic.hasStopped());
+
+	}	
+	@Test
+	public void testRotateLeftWith3Battery() {
+		mySetup();
+		basic.setBatteryLevel(3);
+	    basic.rotate(Turn.LEFT);
+	    assertTrue(basic.curDir == CardinalDirection.South);
+		assertTrue(basic.hasStopped());	
+	}	
+	
+	@Test
+	public void testRotateAroundWith3Battery() {
+		mySetup();
+		basic.setBatteryLevel(3);
+	    basic.rotate(Turn.AROUND);
+	    assertTrue(basic.curDir == CardinalDirection.East);
+		assertTrue(basic.hasStopped());	
+	}
+	@Test
+	public void testRotateAroundWith6Battery() {
+		mySetup();
+		basic.setBatteryLevel(6);
+	    basic.rotate(Turn.AROUND);
+	    assertTrue(basic.curDir == CardinalDirection.West);
+		assertTrue(basic.hasStopped());	
+	}
+	@Test
+	public void testtest() {
+		
+		mySetup();	
+		assertTrue(basic.curDir == CardinalDirection.East);
+		
+	}
+	
+	@Test
+	public void test1MoveBattery() {
+		mySetup();
+		basic.move(1, true);
+		assertTrue(basic.getBatteryLevel()==2994);
+	}
+	@Test
+	public void testWestMoveBattery() {
+		mySetup();
+		curDir = CardinalDirection.West;
+		basic.move(1, true);
+		assertTrue(basic.getBatteryLevel()==2994);
+	}
+	@Test
+	public void test2MoveBattery() {
+		mySetup();
+		basic.move(1, true);
+		basic.move(1, true);
+		assertTrue(basic.getBatteryLevel()==2988);
+	}
+	@Test
+	public void testMove5Battery() {
+		mySetup();
+		basic.setBatteryLevel(5);
+		basic.move(1, true);	
+		assertTrue(basic.hasStopped());
+	}	
+	@Test
+	public void testMove4Battery() {
+		mySetup();
+		basic.setBatteryLevel(4);
+		basic.move(1, true);	
+		assertTrue(basic.hasStopped());
+	}	
+	@Test
+	public void testAtExit() {
+		mySetup();
+
+		assertFalse(basic.isAtExit());
+	}
+	@Test
+	public void testcanSeeExit() {
+		mySetup();
+
+		assertFalse(basic.canSeeExit(Direction.FORWARD));
+	}
+
+	@Test
+	public void testhasExitF() {
+		mySetup();
+		assertTrue(basic.hasDistanceSensor(Direction.FORWARD));
+	}
+	@Test
+	public void testhasExitB() {
+		mySetup();
+		assertTrue(basic.hasDistanceSensor(Direction.BACKWARD));
+	}
+	@Test
+	public void testhasExitL() {
+		mySetup();
+		assertTrue(basic.hasDistanceSensor(Direction.LEFT));
+	}
+	@Test
+	public void testhasExitR() {
+		mySetup();
+		assertTrue(basic.hasDistanceSensor(Direction.RIGHT));
+	}
+	
+	@Test
+	public void testDistanceToObstacleL() {
+		mySetup();
+		assertTrue(basic.distanceToObstacle(Direction.LEFT)>=0);
+	}
+	@Test
+	public void testDistanceToObstacleR() {
+		mySetup();
+		assertTrue(basic.distanceToObstacle(Direction.RIGHT)>=0);
+	}
+	@Test
+	public void testDistanceToObstacleB() {
+		mySetup();
+		assertTrue(basic.distanceToObstacle(Direction.FORWARD)>=0);
+	}
+	@Test
+	public void testDistanceToObstacleF() {
+		mySetup();
+		assertTrue(basic.distanceToObstacle(Direction.BACKWARD)>=0);
+	}
+	
+	
+	@Test
+	public void testResetOdometer() {
+		mySetup();
+		basic.resetOdometer();
+		assertEquals(basic.getOdometerReading(),0);
+	}
+	@Test
+	public void testgetEnergy() {
+		mySetup();
+		assertTrue(basic.getEnergyForFullRotation()==12);
+		assertTrue(basic.getEnergyForStepForward()==5);
+		basic.setBatteryLevel(0);
+		basic.setBatteryLevel(0);
+		assertEquals(basic.getCurrentDirection(),CardinalDirection.East);
+		assertTrue(basic.hasStopped());
+		assertTrue(basic.hasRoomSensor());
+		assertTrue(basic.getBatteryLevel()==0);
+		
+	}
+	@Test
+	public void testinRoom() {
+		mySetup();
+		assertFalse(basic.isInsideRoom());
+	}
+	@Test
+	public void testMoveCurEast(){
+		mySetup();
+		basic.curDir = CardinalDirection.East;
+		basic.move(1, false);
+		assertFalse(basic.isAtExit());
+	}
+	@Test
+	public void testMovess() {
+		mySetup();
+		
+		if (basic.distanceToObstacle(Direction.BACKWARD)>=1){
+			basic.rotate(Turn.AROUND);
+			basic.move(1, true);
+		}
+		else if (basic.distanceToObstacle(Direction.FORWARD)>=1){
+
+			basic.move(1, true);
+		}		
+		else if (basic.distanceToObstacle(Direction.LEFT)>=1){
+            basic.rotate(Turn.LEFT);
+			basic.move(1, true);
+		}		
+		else if (basic.distanceToObstacle(Direction.RIGHT)>=1){
+            basic.rotate(Turn.RIGHT);
+			basic.move(1, true);
+		}
+
+		assertFalse(basic.hasStopped());
+		
+	}
+	@Test
+	public void testMovess2() {
+		mySetup();
+		
+		if (basic.distanceToObstacle(Direction.RIGHT)>=1){
+            basic.rotate(Turn.RIGHT);
+			basic.move(1, true);
+		}
+		else if (basic.distanceToObstacle(Direction.BACKWARD)>=1){
+			basic.rotate(Turn.AROUND);
+			basic.move(1, true);
+		}
+		else if (basic.distanceToObstacle(Direction.FORWARD)>=1){
+
+			basic.move(1, true);
+		}		
+		else if (basic.distanceToObstacle(Direction.LEFT)>=1){
+            basic.rotate(Turn.LEFT);
+			basic.move(1, true);
+		}
+
+		assertFalse(basic.hasStopped());
+		
+	}
+	@Test
+	public void testMovess3() {
+		mySetup();
+		
+		if (basic.distanceToObstacle(Direction.LEFT)>=1){
+            basic.rotate(Turn.LEFT);
+			basic.move(1, true);
+		}		
+		else if (basic.distanceToObstacle(Direction.BACKWARD)>=1){
+			basic.rotate(Turn.AROUND);
+			basic.move(1, true);
+		}
+		else if (basic.distanceToObstacle(Direction.FORWARD)>=1){
+
+			basic.move(1, true);
+		}		
+
+		else if (basic.distanceToObstacle(Direction.RIGHT)>=1){
+            basic.rotate(Turn.RIGHT);
+			basic.move(1, true);
+		}
+
+		assertFalse(basic.hasStopped());
+		
+	}
+	@Test
+	public void testMovess4() {
+		mySetup();
+		
+		
+		if (basic.distanceToObstacle(Direction.FORWARD)>=1){
+
+			basic.move(1, true);
+		}		
+		else if (basic.distanceToObstacle(Direction.LEFT)>=1){
+            basic.rotate(Turn.LEFT);
+			basic.move(1, true);
+		}		
+		else if (basic.distanceToObstacle(Direction.RIGHT)>=1){
+            basic.rotate(Turn.RIGHT);
+			basic.move(1, true);
+		}
+		else if (basic.distanceToObstacle(Direction.BACKWARD)>=1){
+			basic.rotate(Turn.AROUND);
+			basic.move(1, true);
+		}
+
+		assertFalse(basic.hasStopped());
+		
+	}
+	
+	
+}
